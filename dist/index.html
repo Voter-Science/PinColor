@@ -7,13 +7,12 @@
     <body>
             <script>
                 var _sheetRefGlobal = null;
-                var _trcGlobal = null;
             </script>
-        
+
         <div id="example"></div>
 
         <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-        
+
         <!-- Dependencies -->
         <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
         <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
@@ -23,12 +22,12 @@
 
         <script src="https://trcanvasdata.blob.core.windows.net/code2/plugin.js"></script>
         <script>
-                // Well known entry point called by hosting infrastructure 
-               function PluginMain(sheetRef, opts) {      
+                // Well known entry point called by hosting infrastructure
+               function PluginMain(sheetRef, opts) {
                     // alert('loaded:' + sheetRef);
-                    _sheetRefGlobal = sheetRef;        
+                    _sheetRefGlobal = sheetRef;
                    window.mainMajor.setSheetRef(sheetRef);
                }
-        </script> 
+        </script>
     </body>
 </html>

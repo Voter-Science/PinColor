@@ -2,25 +2,25 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import * as trcSheet from 'trc-sheet/sheet'
+import * as bcl from 'trc-analyze/collections'
 
 import { SheetContainer, IMajorState } from 'trc-react/dist/SheetContainer'
 
-import * as bcl from 'trc-analyze/collections'
+import TRCContext from 'trc-react/dist/context/TRCContext';
 
 import { PluginShell } from 'trc-react/dist/PluginShell';
 import { ColumnSelector } from 'trc-react/dist/ColumnSelector';
 import { ColumnCheck } from 'trc-react/dist/ColumnCheck';
 
-declare var _trcGlobal: IMajorState;
-
-
-// Lets somebody lookup a voter, and then answer questions about them. 
-// See all answers in Audit. 
+// Lets somebody lookup a voter, and then answer questions about them.
+// See all answers in Audit.
 export class App extends React.Component<{}, {
     _ci: trcSheet.IColumnInfo // currently selected column
-    _mapping: any, // maps from _Ci's possible values to a color code. 
+    _mapping: any, // maps from _Ci's possible values to a color code.
 }>
 {
+    static contextType = TRCContext;
+
     public constructor(props: any) {
         super(props);
 
@@ -28,7 +28,7 @@ export class App extends React.Component<{}, {
             _ci: undefined,
             _mapping: {}
         };
-        
+
         this.renderValues = this.renderValues.bind(this);
         this.renderColorChoices = this.renderColorChoices.bind(this);
         this.renderCurrentColor = this.renderCurrentColor.bind(this);
@@ -43,11 +43,11 @@ export class App extends React.Component<{}, {
         // This will cause a re-render of renderColorChoices
         this.setState({
             _ci: ci,
-            _mapping: {} // reset previous color mappings. 
+            _mapping: {} // reset previous color mappings.
         });
     }
 
-    // generate a TRC expression to handle the color. USe this for the new XColor column. 
+    // generate a TRC expression to handle the color. USe this for the new XColor column.
     // This will look like: switch(Party, 'value1', 'r', 'value2','b')
     private getColorExpression() {
         var expr = "switch(" + this.state._ci.Name;
@@ -62,27 +62,27 @@ export class App extends React.Component<{}, {
         return expr;
     }
 
-    // Called after user has determined a color mapping and wants to apply it. 
+    // Called after user has determined a color mapping and wants to apply it.
     private onApply() {
         var expr = this.getColorExpression();
 
-        // SheetOps will pause the UI and handle errors. 
-        _trcGlobal.SheetOps.beginAdminOp((admin: trcSheet.SheetAdminClient) => {            
+        // SheetOps will pause the UI and handle errors.
+        this.context.SheetOps.beginAdminOp((admin: trcSheet.SheetAdminClient) => {
             // Calling postNewExpressionAsync multiple times may not forcibly update the expression.
-            // So first delete the column to force updated.  
-            // It's safe to delete a column that doesn't exist. 
-            return admin.postOpDeleteQuestionAsync("XColor").then( ()=> 
+            // So first delete the column to force updated.
+            // It's safe to delete a column that doesn't exist.
+            return admin.postOpDeleteQuestionAsync("XColor").then( ()=>
                 admin.postNewExpressionAsync("XColor", expr));
         });
     }
 
-    // Remove the XColor column. 
+    // Remove the XColor column.
     private onRemoveColors() {
         var ok = confirm("Are you sure you want to remove the custom pin coloring from this sheet? (this will delete the XColor column)");
         if (!ok) {
             return;
         }
-        _trcGlobal.SheetOps.beginAdminOp(admin => {
+        this.context.SheetOps.beginAdminOp((admin: any) => {
             return admin.postOpDeleteQuestionAsync("XColor");
         });
     }
@@ -106,7 +106,7 @@ export class App extends React.Component<{}, {
         </select>
     }
 
-    // Given a Column, let us select a color for each possible value. 
+    // Given a Column, let us select a color for each possible value.
     private renderValues() {
         var ci = this.state._ci;
         // if (!ci || !ci.PossibleValues || ci.PossibleValues.length == 0) {
@@ -114,11 +114,11 @@ export class App extends React.Component<{}, {
             return <div>(select a column)</div>
         }
 
-        // Take union of possible values in sheet contents plus question. 
+        // Take union of possible values in sheet contents plus question.
         var vals: string[];
         {
             var set = new bcl.HashCount();
-            _trcGlobal._contents[ci.Name].map(x => set.Add(x));
+            this.context._contents[ci.Name].map((x: any) => set.Add(x));
             if (ci.PossibleValues) {
                 ci.PossibleValues.map(x => set.Add(x));
             }
@@ -157,14 +157,14 @@ export class App extends React.Component<{}, {
     }
 
     // Show the current coloring scheme.
-    // Caller has already validated it has one. 
+    // Caller has already validated it has one.
     private renderCurrentColor(ci: trcSheet.IColumnInfo) {
         return <div>
             {ci.Expression ?
                 <div>Current custom color scheme is: {ci.Expression}</div> :
                 <div>(sheet has an existing color scheme)</div>
             }
-            <button onClick={this.onRemoveColors}>Remove custom coloring!</button>            
+            <button onClick={this.onRemoveColors}>Remove custom coloring!</button>
         </div>
     }
 
@@ -185,21 +185,17 @@ export class App extends React.Component<{}, {
     }
 
     render() {
-        // fetch contents so we can get possible values from the contents . 
-        return <PluginShell title="PinColor" details="Set custom pin colors">
-            <SheetContainer
-                onReady={this.renderBody1}
-                fetchContents={true}
-                requireTop={true}>
-            </SheetContainer>
+        // fetch contents so we can get possible values from the contents .
+        return <PluginShell title="PinColor" description="Set custom pin colors">
+            {this.renderBody1()}
         </PluginShell>
 
     };
 }
 
 ReactDOM.render(
-    <div>
-        <App></App>
-    </div>,
+    <SheetContainer fetchContents={true} requireTop={true}>
+        <App />
+    </SheetContainer>,
     document.getElementById("example")
 );
