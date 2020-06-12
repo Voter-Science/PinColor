@@ -8,17 +8,25 @@ import { SheetContainer, IMajorState } from 'trc-react/dist/SheetContainer'
 
 import TRCContext from 'trc-react/dist/context/TRCContext';
 
-import { PluginShell } from 'trc-react/dist/PluginShell';
-import { ColumnSelector } from 'trc-react/dist/ColumnSelector';
+import { Button } from 'trc-react/dist/common/Button';
 import { ColumnCheck } from 'trc-react/dist/ColumnCheck';
+import { ColumnSelector } from 'trc-react/dist/ColumnSelector';
+import { Copy } from 'trc-react/dist/common/Copy';
+import { Grid } from 'trc-react/dist/common/Grid';
+import { HorizontalList } from 'trc-react/dist/common/HorizontalList';
+import { SelectInput } from 'trc-react/dist/common/SelectInput';
+import { Panel } from 'trc-react/dist/common/Panel';
+import { PluginShell } from 'trc-react/dist/PluginShell';
 
 // Lets somebody lookup a voter, and then answer questions about them.
 // See all answers in Audit.
-export class App extends React.Component<{}, {
-    _ci: trcSheet.IColumnInfo // currently selected column
-    _mapping: any, // maps from _Ci's possible values to a color code.
-}>
-{
+
+interface IState {
+    _ci: trcSheet.IColumnInfo; // currently selected column
+    _mapping: any; // maps from _Ci's possible values to a color code.
+}
+
+export class App extends React.Component<{}, IState> {
     static contextType = TRCContext;
 
     public constructor(props: any) {
@@ -95,24 +103,22 @@ export class App extends React.Component<{}, {
         this.setState({ _mapping: map });
     }
     private renderColorChoices(columnValue: string) {
-        return <select onChange={x => this.onColorChanged(x, columnValue)} >
-            <option key="k1" value="">(none)</option>
-            <option key="k2" value="r">Red</option>
-            <option key="k3" value="g">Green</option>
-            <option key="k4" value="b">Blue</option>
-            <option key="k5" value="p">Purple</option>
-            <option key="k6" value="o">Orange</option>
-            <option key="k7" value="y">Yellow</option>
-        </select>
+        return (
+            <SelectInput
+                key={columnValue}
+                label={columnValue}
+                options={['Red', 'Green', 'Blue', 'Purple', 'Orange', 'Yellow']}
+                values={['r', 'g', 'b', 'p', 'o', 'y']}
+                onChange={x => this.onColorChanged(x, columnValue)}
+            />
+        );
     }
 
     // Given a Column, let us select a color for each possible value.
     private renderValues() {
         var ci = this.state._ci;
         // if (!ci || !ci.PossibleValues || ci.PossibleValues.length == 0) {
-        if (!ci) {
-            return <div>(select a column)</div>
-        }
+        if (!ci) return null;
 
         // Take union of possible values in sheet contents plus question.
         var vals: string[];
@@ -126,70 +132,107 @@ export class App extends React.Component<{}, {
         }
 
         if (vals.length > 10) {
-            return <div>Column has too many ({vals.length}) distinct values. </div>
+            return <div>Column has too many ({vals.length}) distinct values.</div>
         }
 
-        // var vals = ci.PossibleValues;
-
-        return <div>
-            <table>
-                <thead>
-                    <tr>
-                        <td>Value</td>
-                        <td>Color</td>
-                    </tr>
-                </thead>
-                <tbody>
-                    {vals.map((columnValue, idx) =>
-                        <tr key={idx}>
-                            <td>
-                                {columnValue}
-                            </td>
-                            <td>
-                                {this.renderColorChoices(columnValue)}
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
-            <button onClick={this.onApply}>Apply!</button>
-        </div>
+        return (
+            <>
+                {vals.map(columnValue => this.renderColorChoices(columnValue))}
+                <HorizontalList alignRight>
+                    <Button onClick={this.onApply}>
+                        Apply
+                    </Button>
+                </HorizontalList>
+            </>
+        );
     }
 
     // Show the current coloring scheme.
     // Caller has already validated it has one.
     private renderCurrentColor(ci: trcSheet.IColumnInfo) {
-        return <div>
-            {ci.Expression ?
-                <div>Current custom color scheme is: {ci.Expression}</div> :
-                <div>(sheet has an existing color scheme)</div>
-            }
-            <button onClick={this.onRemoveColors}>Remove custom coloring!</button>
-        </div>
+        return (
+            <Panel>
+                <Copy>
+                    {ci.Expression ? (
+                        <>
+                            <p>Current custom color scheme is:</p>
+                            <pre>
+{ci.Expression}
+                            </pre>
+                        </>
+                    ) : (
+                        <p>(sheet has an existing color scheme)</p>
+                    )}
+                </Copy>
+                <HorizontalList alignRight>
+                    <Button onClick={this.onRemoveColors}>
+                        Remove custom coloring
+                    </Button>
+                </HorizontalList>
+            </Panel>
+        );
     }
 
     private renderBody1() {
         {
-            // <ListColumns Include={ci => ci.IsReadOnly && ci.PossibleValues != null}></ListColumns>
-            return <div>
-                <ColumnCheck columnName="XColor" OnFound={this.renderCurrentColor}>
-                    Sheet does not have a custom color scheme
-                </ColumnCheck>
-                <div>------</div>
-                <div>Set a custom color scheme based on a column's values:</div>
-                <ColumnSelector Include={ci => true} OnChange={this.columnUpdate} ></ColumnSelector>
-                {this.renderValues()}
-
-            </div>
+            return (
+                <>
+                    <ColumnCheck columnName="XColor" OnFound={this.renderCurrentColor}>
+                        Sheet does not have a custom color scheme
+                    </ColumnCheck>
+                    <Panel>
+                        <Copy>
+                            <p>
+                                Set a custom color scheme based on a column's values:
+                            </p>
+                        </Copy>
+                        <Grid>
+                            <ColumnSelector
+                                Include={ci => true}
+                                OnChange={this.columnUpdate}
+                            />
+                            <div>
+                                {this.renderValues()}
+                            </div>
+                        </Grid>
+                    </Panel>
+                    <Panel>
+                        <Copy>
+                            <h4>Legend:</h4>
+                        </Copy>
+                        <HorizontalList>
+                            <p>
+                                Red: <img src="https://trcanvasdata.blob.core.windows.net/publicimages/marker_Red.png" />
+                            </p>
+                            <p>
+                                Blue: <img src="https://trcanvasdata.blob.core.windows.net/publicimages/marker_Blue.png" />
+                            </p>
+                            <p>
+                                Green: <img src="https://trcanvasdata.blob.core.windows.net/publicimages/marker_Blue.png" />
+                            </p>
+                            <p>
+                                Purple: <img src="https://trcanvasdata.blob.core.windows.net/publicimages/marker_Purple.png" />
+                            </p>
+                            <p>
+                                Orange: <img src="https://trcanvasdata.blob.core.windows.net/publicimages/marker_Orange.png" />
+                            </p>
+                            <p>
+                                Yellow: <img src="https://trcanvasdata.blob.core.windows.net/publicimages/marker_Yellow.png" />
+                            </p>
+                        </HorizontalList>
+                    </Panel>
+                </>
+            );
         }
     }
 
     render() {
         // fetch contents so we can get possible values from the contents .
-        return <PluginShell title="PinColor" description="Set custom pin colors">
-            {this.renderBody1()}
-        </PluginShell>
-
+        return (
+            <PluginShell title="PinColor" description="Set custom pin colors">
+                {this.renderBody1()}
+            </PluginShell>
+        );
     };
 }
 
