@@ -11,18 +11,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/react": "^16.8.14",
-    "@types/react-dom": "^16.8.4",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "trc-analyze": "^1.6.0",
-    "trc-react": "^1.0.1",
-    "trc-sheet": "^1.11.0"
+    "trc-react": "^2.2.0",
+    "trc-sheet": "^1.12.0"
   },
   "devDependencies": {
+    "@types/react": "^16.9.35",
+    "@types/react-dom": "^16.9.8",
     "awesome-typescript-loader": "^5.2.1",
     "source-map-loader": "^0.2.4",
     "trc.runplugin": "^1.4.4",
-    "typescript": "^3.4.5"
+    "typescript": "^3.9.3"
   }
 }
