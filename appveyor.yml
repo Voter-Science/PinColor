@@ -10,7 +10,7 @@ install:
   # Get the latest stable version of Node.js or io.js
   - ps: Install-Product node $env:nodejs_version
   # install modules
-  - npm install -g webpack@4.45.0
+  - npm install -g webpack
   - npm install -g webpack-cli
   - npm install
 
