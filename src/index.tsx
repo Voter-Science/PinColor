@@ -208,7 +208,7 @@ export class App extends React.Component<{}, IState> {
                                 Blue: <img src="https://trcanvasdata.blob.core.windows.net/publicimages/marker_Blue.png" />
                             </p>
                             <p>
-                                Green: <img src="https://trcanvasdata.blob.core.windows.net/publicimages/marker_Blue.png" />
+                                Green: <img src="https://trcanvasdata.blob.core.windows.net/publicimages/marker_Green.png" />
                             </p>
                             <p>
                                 Purple: <img src="https://trcanvasdata.blob.core.windows.net/publicimages/marker_Purple.png" />
